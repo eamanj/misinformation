@@ -1,0 +1,10 @@
+group,belief,freq
+Misinfo,Inaccurate,17.1
+Misinfo,Unsure,40.2
+Misinfo,Accurate,12.85
+MSM,Inaccurate,10.05
+MSM,Unsure,41.3
+MSM,Accurate,19.35
+Placebo,Inaccurate,18
+Placebo,Unsure,41.6
+Placebo,Accurate,11.2

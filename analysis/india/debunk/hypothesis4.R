@@ -393,6 +393,20 @@ ggplot(df, aes(inferred_tie_treatment, correction_mimshare_numeric, fill = infer
         axis.title.y = element_text(size=18),
         legend.title = element_text(size=18), 
         legend.text = element_text(size=16))
+ggplot(df, aes(inferred_tie_treatment, correction_mimshare_numeric, fill = inferred_tie_treatment)) +
+  theme_bw() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) +
+  stat_summary(geom = "bar", fun.y = mean) +
+  stat_summary(geom = "errorbar", fun.data = mean_cl_boot, fun.args=list(conf.int=0.95)) +
+  scale_fill_manual(values = c("red", "blue")) +
+  labs(x="Self-reported Tie Strength", y="Intention to Share Correction") +
+  coord_cartesian(ylim=c(0,2.7)) +
+  theme(plot.title = element_blank(),
+        axis.text.x = element_text(size=26),
+        axis.text.y = element_text(size=26),
+        axis.title.x = element_text(size=26),
+        axis.title.y = element_text(size=26),
+        legend.title = element_text(size=26), 
+        legend.text = element_text(size=26))
 ggsave("./results/india/debunk/inferred_tie_strength_numeric_sharing.png",  width = 6, height = 6)
 # binary measure
 test_res <- summary(aov(QCORR_MIMSHARE_BINARY ~ inferred_tie_treatment, df))

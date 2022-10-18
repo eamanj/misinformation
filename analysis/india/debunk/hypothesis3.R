@@ -8,28 +8,15 @@ source("./analysis/debunk_utils.R")
 data <- process_data("./data/india/debunk/Harvard India data file (August 15) - answers displayed as text.xlsx")
 
 # which filtering to use?
-df <- data
-
-# those who were actually shown a correction from a tie
-df <- data[data$format_treatment != "None",]
-df <- data[data$QATT_SCREEN == 'puce' & data$format_treatment != "None",]
-df <- data[data$correct_misinfo_manip & !is.na(data$correct_misinfo_manip) &
-           data$format_treatment != "None",]
-df <- data[data$QATT_SCREEN == 'puce' &
-           data$correct_misinfo_manip & !is.na(data$correct_misinfo_manip) &
-           data$format_treatment != "None",]
-df <- data[data$correct_corr_manip & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
-df <- data[data$QATT_SCREEN == 'puce' &
-           data$correct_corr_manip & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
-df <- data[data$correct_misinfo_manip & data$correct_corr_manip &
-           !is.na(data$correct_misinfo_manip) & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
-df <- data[data$QATT_SCREEN == 'puce' &
-           data$correct_misinfo_manip & data$correct_corr_manip &
-           !is.na(data$correct_misinfo_manip) & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
+# which filtering to use?
+df <- exclude_nonattentive(data,
+                           no_treatment=TRUE,
+                           real_tie=FALSE,
+                           search_internet=FALSE,
+                           attention_check=TRUE,
+                           correct_misinfo=FALSE,
+                           correct_correction=FALSE,
+                           long_duration=FALSE)
 
 print_summary_table <- function(polr_fit) {
   ctable <- coef(summary(polr_fit))

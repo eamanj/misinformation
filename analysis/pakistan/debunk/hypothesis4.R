@@ -1,22 +1,24 @@
 library(ggplot2)
 library(MASS)
 library(dplyr)
+library(ivpack)
+library(stargazer)
 
 setwd("~/research/misinformation/")
 source("./analysis/pakistan/debunk/clean_data.R")
 source("./analysis/debunk_utils.R")
 data <- process_data("./data/pakistan/debunk/Pakistan results – wave one - answers displayed as text.xlsx")
 
+
 # which filtering to use?
 df <- exclude_nonattentive(data,
                            no_treatment=TRUE,
                            real_tie=TRUE,
                            search_internet=FALSE,
-                           attention_check=TRUE,
+                           attention_check=FALSE,
                            correct_misinfo=FALSE,
                            correct_correction=FALSE,
                            long_duration=TRUE)
-
 
 # if belief moves toward inaccuracy of the claim, it is deemed as higher
 df$belief_change <- ifelse(df$QMISINFO_BELIEF02 > df$QMISINFO_BELIEF01, "Higher",
@@ -54,7 +56,7 @@ ggplot(summary_stats, aes(x=belief_change, y=freq, fill=tie_treatment)) +
 df_test <- df
 df_test <- droplevels(df_test)
 print_summary_table(polr(belief_change ~ tie_treatment, df_test, Hess=TRUE))
-print_summary_table(polr(belief_change ~ tie_treatment + correct_corr_manip + real_tie_name, df_test, Hess=TRUE))
+#print_summary_table(polr(belief_change ~ tie_treatment + correct_corr_manip + real_tie_name, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ tie_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ tie_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ tie_treatment + QACC_NEWS, df_test, Hess=TRUE))
@@ -217,19 +219,9 @@ ggplot(summary_stats, aes(x=tie_credibility03, fill=QCORR_MIMSHARE)) +
   theme(axis.text.x = element_text(angle = 90, size=8)) +
   ylab("Within group Fraction")
 
-df <- exclude_nonattentive(data,
-                           no_treatment=TRUE,
-                           real_tie=FALSE,
-                           search_internet=FALSE,
-                           attention_check=TRUE,
-                           correct_misinfo=FALSE,
-                           correct_correction=FALSE,
-                           long_duration=TRUE)
-
 
 df_test <- df
 df_test <- droplevels(df_test)
-print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QPOLI_ATT, df_test, Hess=TRUE))
@@ -238,8 +230,16 @@ print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QMIM_SEE_NEWS, df_test
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN01, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN01 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN02, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN02 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN03, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_IN03 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED01, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED01 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED02, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED02 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED03, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_MIMSHARE ~ tie_treatment + QCORR_CRED03 + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
 # interaction terms
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_group_treatment, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_MIMSHARE ~ tie_group_treatment + QMIM_DISCUSS_NEWS, df_test, Hess=TRUE))
@@ -266,7 +266,21 @@ ggplot(df, aes(QCORR_CRED01, correction_mimshare_numeric, fill = tie_treatment))
   stat_summary(geom = "bar", fun.y = mean, position='dodge') +
   stat_summary(geom = "errorbar", fun.data = mean_se, position='dodge') +
   ggtitle(paste('ANCOVA p-val:', round(test_res$coefficients[[2,4]], 4))) +
-  labs(x="Perceived Correction Credibility", y="Numeric Sharing Correction", fill="Tie Treatment")
+  labs(x="Perceived Correction Credibility", y="Numeric Sharing Correction", fill="Tie\nTreatment") +
+  scale_x_discrete(labels=c("Not at all accurate"="Not at all\naccurate",
+                            "Slightly accurate"="Slightly\naccurate",
+                            "Moderately accurate"="Moderately\naccurate",
+                            "Accurate"="Accurate",
+                            "Very accurate"="Very\naccurate")) +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+ggsave("./results/pakistan/debunk/tie_strength_intention_to_share.png",  width = 10, height = 6)
+
 test_res <- summary(lm(correction_mimshare_numeric ~ tie_treatment + QMIM_DISCUSS_NEWS, df))
 ggplot(df, aes(QMIM_DISCUSS_NEWS, correction_mimshare_numeric, fill = tie_treatment)) +
   theme_bw() +
@@ -285,7 +299,6 @@ summary(lm(correction_mimshare_numeric ~ tie_treatment + QMIM_SEE_NEWS, df_test)
 summary(lm(correction_mimshare_numeric ~ tie_treatment + QCORR_CRED01, df_test))
 summary(lm(correction_mimshare_numeric ~ tie_treatment + QMIM_DISCUSS_NEWS, df_test))
 summary(lm(correction_mimshare_numeric ~ tie_treatment + QCORR_CRED01 + QMIM_DISCUSS_NEWS, df_test))
-summary(lm(correction_mimshare_numeric ~ tie_treatment + QCORR_IN03 + QMIM_DISCUSS_NEWS, df_test))
 # interaction terms
 summary(lm(correction_mimshare_numeric ~ tie_treatment*QCORR_CRED01, df_test))
 summary(lm(correction_mimshare_numeric ~ tie_treatment*QCORR_CRED01 + QMIM_DISCUSS_NEWS, df_test))
@@ -377,9 +390,34 @@ ggplot(df, aes(inferred_tie_treatment, correction_mimshare_numeric, fill = infer
   theme_bw() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) +
   stat_summary(geom = "bar", fun.y = mean) +
   stat_summary(geom = "errorbar", fun.data = mean_cl_boot, fun.args=list(conf.int=0.95)) +
+  coord_cartesian(ylim=c(0,2)) +
+  scale_y_continuous(breaks=c(0,1,2)) +
   scale_fill_manual(values = c("red", "blue")) +
-  labs(x="Self-reported Tie Treatment", y="Numeric Correction Sharing") +
-  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 6)))
+  labs(x="Self-reported Tie Strength", y="Numeric Correction Sharing") +
+  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 6))) +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+ggplot(df, aes(inferred_tie_treatment, correction_mimshare_numeric, fill = inferred_tie_treatment)) +
+  theme_bw() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) +
+  stat_summary(geom = "bar", fun.y = mean) +
+  stat_summary(geom = "errorbar", fun.data = mean_cl_boot, fun.args=list(conf.int=0.95)) +
+  scale_fill_manual(values = c("red", "blue")) +
+  labs(x="Self-reported Tie Strength", y="Intention to Share Correction") +
+  coord_cartesian(ylim=c(0,2.7)) +
+  theme(plot.title = element_blank(),
+        axis.text.x = element_text(size=26),
+        axis.text.y = element_text(size=26),
+        axis.title.x = element_text(size=26),
+        axis.title.y = element_text(size=26),
+        legend.title = element_text(size=26), 
+        legend.text = element_text(size=26))
+ggsave("./results/pakistan/debunk/inferred_tie_strength_numeric_sharing.png",  width = 6, height = 6)
+
 # binary measure
 test_res <- summary(aov(QCORR_MIMSHARE_BINARY ~ inferred_tie_treatment, df))
 ggplot(df, aes(inferred_tie_treatment, as.numeric(QCORR_MIMSHARE_BINARY), fill = inferred_tie_treatment)) +
@@ -387,8 +425,16 @@ ggplot(df, aes(inferred_tie_treatment, as.numeric(QCORR_MIMSHARE_BINARY), fill =
   stat_summary(geom = "bar", fun.y = mean) +
   stat_summary(geom = "errorbar", fun.data = mean_cl_boot, fun.args=list(conf.int=0.95)) +
   scale_fill_manual(values = c("red", "blue")) +
-  labs(x="Self-reported Tie Treatment", y="Binary Correction Sharing") +
-  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 6)))
+  labs(x="Self-reported Tie Strength", y="Binary Correction Sharing") +
+  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 6))) +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+
 # ordinal measure
 test_res <- chisq.test(df$inferred_tie_treatment, df$QCORR_MIMSHARE)
 summary_stats <- df[,c("inferred_tie_treatment", "QCORR_MIMSHARE")] %>%
@@ -396,12 +442,24 @@ summary_stats <- df[,c("inferred_tie_treatment", "QCORR_MIMSHARE")] %>%
   mutate(treatment_count=n()) %>%
   group_by(inferred_tie_treatment, QCORR_MIMSHARE) %>% 
   summarise(freq=n()/first(treatment_count))
-ggplot(summary_stats, aes(x=QCORR_MIMSHARE, y=freq, fill=inferred_tie_treatment)) +
+summary_stats$percent_freq <- paste0(round(summary_stats$freq*100, 1), '%')
+ggplot(summary_stats, aes(x=QCORR_MIMSHARE, y=freq, fill=inferred_tie_treatment, label=percent_freq)) +
   geom_bar(stat='identity', position='dodge') +
   ylab("Within treatment fraction") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  labs(x="Sharing Correction", y="Within treatment fraction", fill="Self-reported\nTie Treatment") +
-  ggtitle(paste('Pearson Chi-squared p-val:', round(test_res$p.value, 4)))
+  labs(x="Sharing Correction", y="Within treatment fraction", fill="Self-reported\nTie Strength") +
+  ggtitle(paste('Pearson Chi-squared p-val:', round(test_res$p.value, 4))) +
+  ylim(0,0.42) +
+  geom_text(size=5, position=position_dodge(0.9), hjust=0.5, vjust=-0.25) +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+ggsave("./results/pakistan/debunk/inferred_tie_strength_ordinal_sharing.png",  width = 11, height = 7)
+
 # with tie and group
 test_res <- summary(aov(correction_mimshare_numeric ~ inferred_tie_group_treatment, df))
 ggplot(df, aes(inferred_tie_group_treatment, correction_mimshare_numeric, fill = inferred_tie_group_treatment)) +
@@ -409,8 +467,18 @@ ggplot(df, aes(inferred_tie_group_treatment, correction_mimshare_numeric, fill =
   theme(plot.title = element_text(hjust = 0.5)) +
   stat_summary(geom = "bar", fun.y = mean) +
   stat_summary(geom = "errorbar", fun.data = mean_se) +
-  labs(x="Sharing Correction", y="Within treatment fraction", fill="Self-reported\nTie-Group Treatment") +
-  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 4)))
+  coord_cartesian(ylim=c(0,2)) +
+  scale_y_continuous(breaks=c(0,1,2)) +
+  labs(x="Self-reported Tie Strength-Group", y="Numeric Correction Sharing", fill="Self-reported\nTie Strength-Group") +
+  ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 4))) +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+ggsave("./results/pakistan/debunk/inferred_tie_strength_group_numeric_sharing.png",  width = 11, height = 7)
 
 ######################
 # IV analysis
@@ -418,7 +486,7 @@ df <- exclude_nonattentive(data,
                            no_treatment=TRUE,
                            real_tie=TRUE,
                            search_internet=FALSE,
-                           attention_check=TRUE,
+                           attention_check=FALSE,
                            correct_misinfo=FALSE,
                            correct_correction=FALSE,
                            long_duration=FALSE)
@@ -449,7 +517,7 @@ ivmodel3 <- ivreg(formula = formula, data = df, x = TRUE)
 ivmod3_sum <- summary(ivmodel3, diagnostic = TRUE)
 ivmod3_sum
 
-output_file <- "./results/india/debunk/tie_strength_iv_model.html"
+output_file <- "./results/pakistan/debunk/tie_strength_iv_model.html"
 dep_var_description <- "Dep Var: Numeric Intention to Share"
 indep_var_descriptions <- c("Weak Tie Treatment", "Numeric Discuss News on MIM",
                             "Numeric Debunk Perceived Credibility")

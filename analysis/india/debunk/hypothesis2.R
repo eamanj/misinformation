@@ -57,6 +57,20 @@ ggplot(summary_stats, aes(x=belief_change, y=freq, fill=format_treatment, label=
         axis.title.y = element_text(size=18),
         legend.title = element_text(size=18), 
         legend.text = element_text(size=16))
+ggplot(summary_stats, aes(x=belief_change, y=freq*100, fill=format_treatment, label=percent_freq)) +
+  geom_bar(stat='identity', position='dodge') +
+  geom_text(size=6, position=position_dodge(0.9), hjust=0.5, vjust=-0.25) +
+  ylab("% of Respondents") +
+  labs(fill="Correction\nFormat") +
+  coord_cartesian(ylim=c(0,51)) +
+  ggtitle('Change in Belief') +
+  theme(plot.title = element_text(hjust = 0.5, size=27),
+        axis.text.x = element_text(size=26),
+        axis.text.y = element_text(size=26),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size=26),
+        legend.title = element_text(size=26), 
+        legend.text = element_text(size=26))
 ggsave("./results/india/debunk/format_belief_change.png",  width = 10, height = 6)
 
 
@@ -66,7 +80,9 @@ df_test <- df[df$format_treatment %in% c("Text", "Audio"),]
 
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 print_summary_table(polr(belief_change ~ format_treatment, df_test, Hess=TRUE))
+print_summary_table(polr(belief_change ~ is_audio, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ format_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ format_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change ~ format_treatment + QACC_NEWS, df_test, Hess=TRUE))
@@ -85,14 +101,24 @@ ggplot(df, aes(format_treatment, belief_change_numeric, fill = format_treatment)
   stat_summary(geom = "bar", fun.y = mean) +
   stat_summary(geom = "errorbar", fun.data = mean_se) +
   ggtitle(paste('ANOVA p-val:', round(test_res[[1]]$`Pr(>F)`[1], 4))) +
-  labs(x="Correcton Format", y="Numeric Belief Change", fill="Correction\nFormat")
+  labs(x="Correcton Format", y="Numeric Belief Change", fill="Correction\nFormat") +
+  theme(plot.title = element_text(hjust = 0.5, size=20),
+        axis.text.x = element_text(size=16),
+        axis.text.y = element_text(size=16),
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_text(size=18),
+        legend.title = element_text(size=18), 
+        legend.text = element_text(size=16))
+ggsave("./results/india/debunk/format_belief_change_numeric.png",  width = 10, height = 6)
 
 df_test <- df
 df_test <- df[df$format_treatment %in% c("Text", "Image"),]
 df_test <- df[df$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 summary(lm(belief_change_numeric ~ format_treatment, df_test))
+summary(lm(belief_change_numeric ~ is_audio, df_test))
 summary(lm(belief_change_numeric ~ format_treatment + QPOLI_INTEREST, df_test))
 summary(lm(belief_change_numeric ~ format_treatment + QPOLI_ATT, df_test))
 summary(lm(belief_change_numeric ~ format_treatment + QACC_NEWS, df_test))
@@ -124,7 +150,9 @@ df_test <- df[df$format_treatment %in% c("Text", "Audio"),]
 
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 print_summary_table(polr(belief_change_factor ~ format_treatment, df_test, Hess=TRUE))
+print_summary_table(polr(belief_change_factor ~ is_audio, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change_factor ~ format_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change_factor ~ format_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(belief_change_factor ~ format_treatment + QACC_NEWS, df_test, Hess=TRUE))

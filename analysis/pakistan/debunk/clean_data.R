@@ -66,8 +66,8 @@ add_aux_variables <- function(data) {
   data$correct_color_misinfo_attention_checks <- (data$correct_attention_check & data$correct_misinfo_manip)
   data$correct_color_corr_attention_checks <- (data$correct_attention_check & data$correct_corr_manip)
   data$correct_misinfo_corr_attention_checks <- (data$correct_misinfo_manip & data$correct_corr_manip)
-  # survey took too long (99% quantile)
-  data$too_long <- (data$survey_duration_mins > quantile(data$survey_duration_mins, 0.99, na.rm=TRUE))
+  # survey took too long (97% quantile)
+  data$too_long <- (data$survey_duration_mins > quantile(data$survey_duration_mins, 0.97, na.rm=TRUE))
   
    
   return(data)
@@ -348,6 +348,10 @@ fix_urdu_variables <- function(data) {
                                  "(Less than 14,000 PKR)|(PKR 14,000 - PKR 30,000)|(PKR 30,001 – PKR 50,000)|(PKR 50,001 – PKR 80,000)|(PKR 80,001 – PKR 100,000)|(PKR 100,001 – PKR 150,000)|(More than PKR 150,000)|(More than PKR 150,000)|(Refused / Prefer not to say)")
   data$QHOUSE_INC <- income
   
+  religion <- stringr::str_extract(data$QRELIGION,
+                                   "(Christianity)|(Hinduism)|(Islam)|(None)|(Other)|(Sikhism)")
+  data$QRELIGION <- religion
+  
   # news consumption vars
   poli_interst <- stringr::str_extract(data$QPOLI_INTEREST,
                                       "(Moderately interested)|(Not at all interested)|(Slightly interested)|(Very interested)|(Interested)")
@@ -458,7 +462,37 @@ fix_urdu_variables <- function(data) {
                                     "(Strongly disagree)|(Somewhat disagree)|(Neither agree nor disagree)|(Somewhat agree)|(Strongly agree)")
   data$QTIE_AGREE <- tie_agree
   
-  
+  # prevalence columns
+  PREVALENCE_COLS <- paste0("LOOPCLAIM_PREV_CLAIM_BELIEF_", seq(116), "_QCLAIM_PREV")
+  BELIEF_COLS <- paste0("LOOPCLAIM_PREV_CLAIM_BELIEF_", seq(116), "_QCLAIM_BELIEF")
+  for(prev_col in PREVALENCE_COLS) {
+    prevalence <- stringr::str_extract(data[[prev_col]], "(Yes)|(Maybe)|(No)")
+    data[[prev_col]] <- prevalence
+  }
+  for(belief_col in BELIEF_COLS) {
+    belief <- stringr::str_extract(data[[belief_col]],
+                                   "(Definitely accurate)|(Probably accurate)|(Not sure if accurate or inaccurate)|(Probably inaccurate)|(Definitely inaccurate)")
+    data[[belief_col]] <- belief
+  }
+  return(data)
+}
+
+
+fix_platform_variables <- function(data) {
+  # the order in platforms list corresponds to the order of platform variables in the data
+  PLATFORMS <- c("WhatsApp", "Telegram", "Facebook Messenger", "Viber", "Line", "WeChat", "Facebook",
+                 "Twitter", "Instagram", "LinkedIn", "Television", "Radio", "Newspaper", "Magazine",
+                 "Word-of-mouth", "Other", "Dont know")
+  PLATFORM_COLS <- paste0("LOOPCLAIM_PREV_CLAIM_BELIEF_", seq(116), "_QCLAIM_PLAT_")
+  for(i in c(seq(15), 98, 99)) {
+    cols <- paste0(PLATFORM_COLS, i)
+    # replace No  values in the columns of all claims with NA
+    data[,cols] <- lapply(data[cols], function(x) replace(x,x == "No", NA))
+    # Now replace yes values with corresponding platform
+    platform_idx <- ifelse(i < 16, i, ifelse(i==98, 16, 17) )
+    platform <- PLATFORMS[platform_idx]
+    data[,cols] <- lapply(data[cols], function(x) replace(x,x == "Yes", platform))
+  }
   return(data)
 }
 
@@ -469,6 +503,7 @@ process_data <- function(data_file) {
   data$ppp_tweet <- (data$MRK_DEF_MAIN_2 == "Yes")
   data$pti_tweet <- (data$MRK_DEF_MAIN_3 == "Yes")
   data <- fix_urdu_variables(data)
+  data <- fix_platform_variables(data)
   
   # get tie role
   data$tie_role <- "Friend"

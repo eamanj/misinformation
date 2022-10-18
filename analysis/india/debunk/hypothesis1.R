@@ -8,18 +8,14 @@ source("./analysis/debunk_utils.R")
 data <- process_data("./data/india/debunk/Harvard India data file (August 15) - answers displayed as text.xlsx")
 
 # which filtering to use?
-df <- data
-
-# those who were actually shown a correction from a tie
-df <- data[data$format_treatment != "None",]
-df <- data[data$QATT_SCREEN == 'puce' & data$format_treatment != "None",]
-df <- data[data$correct_misinfo_manip & !is.na(data$correct_misinfo_manip) &
-           data$format_treatment != "None",]
-df <- data[data$correct_corr_manip & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
-df <- data[data$correct_misinfo_manip & data$correct_corr_manip &
-           !is.na(data$correct_misinfo_manip) & !is.na(data$correct_corr_manip) &
-           data$format_treatment != "None",]
+df <- exclude_nonattentive(data,
+                           no_treatment=TRUE,
+                           real_tie=FALSE,
+                           search_internet=FALSE,
+                           attention_check=TRUE,
+                           correct_misinfo=FALSE,
+                           correct_correction=FALSE,
+                           long_duration=FALSE)
 
 print_summary_table <- function(polr_fit) {
   ctable <- coef(summary(polr_fit))
@@ -51,7 +47,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 print_summary_table(polr(QCORR_IN01 ~ format_treatment, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_IN01 ~ is_audio, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN01 ~ format_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN01 ~ format_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN01 ~ format_treatment + QACC_NEWS, df_test, Hess=TRUE))
@@ -75,7 +73,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 summary(glm(QCORR_IN01_BINARY ~ format_treatment, df_test, family='binomial'))
+summary(glm(QCORR_IN01_BINARY ~ is_audio, df_test, family='binomial'))
 summary(glm(QCORR_IN01_BINARY ~ format_treatment + QPOLI_INTEREST, df_test, family='binomial'))
 summary(glm(QCORR_IN01_BINARY ~ format_treatment + QPOLI_ATT, df_test, family='binomial'))
 summary(glm(QCORR_IN01_BINARY ~ format_treatment + QACC_NEWS, df_test, family='binomial'))
@@ -101,7 +101,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 print_summary_table(polr(QCORR_IN02 ~ format_treatment, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_IN02 ~ is_audio, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN02 ~ format_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN02 ~ format_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN02 ~ format_treatment + QACC_NEWS, df_test, Hess=TRUE))
@@ -125,7 +127,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 summary(glm(QCORR_IN02_BINARY ~ format_treatment, df_test, family='binomial'))
+summary(glm(QCORR_IN02_BINARY ~ is_audio, df_test, family='binomial'))
 summary(glm(QCORR_IN02_BINARY ~ format_treatment + QPOLI_INTEREST, df_test, family='binomial'))
 summary(glm(QCORR_IN02_BINARY ~ format_treatment + QPOLI_ATT, df_test, family='binomial'))
 summary(glm(QCORR_IN02_BINARY ~ format_treatment + QACC_NEWS, df_test, family='binomial'))
@@ -152,7 +156,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 print_summary_table(polr(QCORR_IN03 ~ format_treatment, df_test, Hess=TRUE))
+print_summary_table(polr(QCORR_IN03 ~ is_audio, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN03 ~ format_treatment + QPOLI_INTEREST, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN03 ~ format_treatment + QPOLI_ATT, df_test, Hess=TRUE))
 print_summary_table(polr(QCORR_IN03 ~ format_treatment + QACC_NEWS, df_test, Hess=TRUE))
@@ -176,7 +182,9 @@ df_test <- df1[df1$format_treatment %in% c("Text", "Image"),]
 df_test <- df1[df1$format_treatment %in% c("Text", "Audio"),]
 
 df_test <- droplevels(df_test)
+df_test$is_audio <- (df_test$format_treatment == "Audio")
 summary(glm(QCORR_IN03_BINARY ~ format_treatment, df_test, family='binomial'))
+summary(glm(QCORR_IN03_BINARY ~ is_audio, df_test, family='binomial'))
 summary(glm(QCORR_IN03_BINARY ~ format_treatment + QPOLI_INTEREST, df_test, family='binomial'))
 summary(glm(QCORR_IN03_BINARY ~ format_treatment + QPOLI_ATT, df_test, family='binomial'))
 summary(glm(QCORR_IN03_BINARY ~ format_treatment + QACC_NEWS, df_test, family='binomial'))
